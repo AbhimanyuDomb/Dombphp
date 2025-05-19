@@ -1,0 +1,40 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to EC2 server
+        env:
+          EC2_USER: ec2-user
+          EC2_HOST: ${{ secrets.MAIN_SERVER_IP }}
+          APP_DIR: /usr/share/nginx/html
+        run: |
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST <<EOF
+            set -e
+            cd $APP_DIR
+            git pull origin main
+            if [ -f composer.json ] && command -v composer >/dev/null 2>&1; then
+              composer install --no-dev --optimize-autoloader
+            fi
+            if command -v php >/dev/null 2>&1 && [ -f artisan ]; then
+              php artisan migrate --force
+              php artisan config:cache
+              php artisan route:cache
+            fi
+            sudo systemctl reload nginx
+          EOF
