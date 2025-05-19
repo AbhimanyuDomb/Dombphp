@@ -16,7 +16,7 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host: ${{ secrets.QA_SERVER_IP }}
+          host: ${{ secrets.MAIN_SERVER_IP }}
           username: ec2-user  # or 'ubuntu' if your EC2 uses Ubuntu AMI
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
