@@ -1,0 +1,26 @@
+name: Deploy to QA Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.MAIN_SERVER_IP }}
+          username: ec2-user  # or 'ubuntu' if your EC2 uses Ubuntu AMI
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ec2-user/your-app-folder
+            git pull origin main
+            npm install         # or pip install -r requirements.txt, etc.
+            pm2 restart app     # or however you run the server
